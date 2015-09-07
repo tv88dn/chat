@@ -80,6 +80,14 @@ class PoprigunChat extends ActiveRecord implements StatusInterface
     /**
      * @return \yii\db\ActiveQuery
      */
+    public function getChatUserRel()
+    {
+        return $this->hasMany(PoprigunChatUserRel::className(), ['chat_id'=>'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
     public function getDialog()
     {
         return $this->hasOne(PoprigunChatDialog::className(), ['id' => 'dialog_id']);

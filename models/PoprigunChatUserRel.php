@@ -64,4 +64,19 @@ class PoprigunChatUserRel extends \yii\db\ActiveRecord
     {
         return $this->hasOne(PoprigunChat::className(), ['id' => 'chat_id']);
     }
+
+    public static function setStatus($dialog_id, $status, $user_id = null)
+    {
+        $user_id = $user_id ? $user_id : Yii::$app->user->id;
+        $relations = self::find()->joinWith('chatUser')
+            ->where(['poprigun_chat_user.user_id'=>$user_id, 'poprigun_chat_user.dialog_id'=>$dialog_id])
+            ->all();
+        $res = true;
+        for($i = 0; $i < count($relations); $i++)
+        {
+            $relations[$i]->status = $status;
+            $res = $res && $relations[$i]->save();
+        }
+        return $res;
+    }
 }

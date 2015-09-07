@@ -4,8 +4,11 @@ namespace poprigun\chat\controllers;
 
 use poprigun\chat\Chat;
 use poprigun\chat\filters\AjaxFilter;
+use poprigun\chat\interfaces\StatusInterface;
 use poprigun\chat\models\PoprigunChat;
 use poprigun\chat\models\PoprigunChatDialog;
+use poprigun\chat\models\PoprigunChatUser;
+use poprigun\chat\models\PoprigunChatUserRel;
 use Yii;
 use yii\helpers\Url;
 use yii\web\BadRequestHttpException;
@@ -72,10 +75,10 @@ class ChatController extends Controller{
         }
 
         if($old){
-            $json = $this->getMessageArray($dialog->getOldMessages($limit, $offset),$options);
+            $json = $this->getMessageArray($dialog->getMessages($limit, $offset),$options);
         }else{
 
-            $json = $this->getMessageArray($dialog->getLastMessages(empty($offset) ? $limit : null, $offset),$options);
+            $json = $this->getMessageArray($dialog->getMessages(empty($offset) ? $limit : null, $offset),$options);
         }
 
         if(!empty($json)){
@@ -93,6 +96,20 @@ class ChatController extends Controller{
     }
 
     /**
+     * Delete dialog
+     *
+     * @param $dialog_id
+     * @return array
+     */
+    public function actionDeleteDialog($dialog_id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'status' => PoprigunChatUserRel::setStatus($dialog_id, StatusInterface::STATUS_DELETED) ? 'success':'error'
+        ];
+    }
+
+    /**
      * Send message
      *
      * @return bool
@@ -105,7 +122,7 @@ class ChatController extends Controller{
         $message = Yii::$app->request->post('message');
 
         Yii::$app->response->format = Response::FORMAT_JSON;
-        return PoprigunChatDialog::isMessageSend($this->user->id, $id, $type, $message);
+        return $this->getMessageArray([PoprigunChatDialog::messageSend($this->user->id, $id, $type, $message)]);
     }
 
     protected function getMessageArray($dialog, $options = []){
@@ -153,7 +170,7 @@ class ChatController extends Controller{
                 }
 
                 if(!isset($options['showLastMessage']) || $options['showLastMessage'] == true){
-                    $lastMessages = $dialog->lastMessages;
+                    $lastMessages = $dialog->messages;
                     $result[$key]['last_message'] =  !empty($lastMessages[0]->message) ? $lastMessages[0]->message : '';
                 }
             }

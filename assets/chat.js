@@ -159,7 +159,7 @@ $(window).ready(function(){
                     self.getDialogMessageStatus = false;
                 });
             }
-        }
+        };
 
         //Date format
         function dateTimeZone(messageDate, dateFormat){
@@ -181,45 +181,43 @@ $(window).ready(function(){
         }
 
         //scroll message
-        function scrollMessages(parent, dialogId){
+        function scrollMessages(parent, dialogId) {
+            var scrollBlock = $('.poprigun-chat-message-ajax');
+            scrollBlock.scroll(function () {
+                    var scroll = scrollBlock.scrollTop();
+                    var height = scrollBlock.height();
+                    if (scroll + height == height) {
+                        if (!$(parent).attr('loaded')) {
+                            $(parent).attr('loaded', 'loaded');
 
-            var scrollBlock = $('#poprigun-chat-message-ajax');
-
-            scrollBlock.scroll(function() {
-                var scroll = scrollBlock.scrollTop();
-                var height = scrollBlock.height();
-                if (scroll + height == height) {
-                    if(!$(parent).attr('loaded')) {
-                        $(parent).attr('loaded', 'loaded');
-
-                        $.ajax({
-                            type: 'GET',
-                            url: '/pchat/get-dialog-messages?dialogId='+dialogId,
-                            dataType: 'json',
-                            data: {
-                                offset : self.messageOldCount,
-                                old : true,
-                                options:  {
-                                    showAvatar: self.showAvatar,
-                                    count: self.count
+                            $.ajax({
+                                type: 'GET',
+                                url: '/pchat/get-dialog-messages?dialogId=' + dialogId,
+                                dataType: 'json',
+                                data: {
+                                    offset: self.messageOldCount,
+                                    old: true,
+                                    options: {
+                                        showAvatar: self.showAvatar,
+                                        count: self.count
+                                    }
+                                },
+                                success: function (data) {
+                                    $.each(data, function (i, j) {
+                                        j.date = dateTimeZone(j.date, self.dateFormat);
+                                        addItem(j, '#poprigun-chat-message', '#poprigun-chat-message-block', false);
+                                        oldMessageIncrease();
+                                    });
+                                },
+                                error: function (error) {
+                                    console.log(error)
                                 }
-                            },
-                            success:function(data){
-                                $.each(data,function(i,j){
-                                    j.date = dateTimeZone(j.date,self.dateFormat);
-                                    addItem(j,'#poprigun-chat-message','#poprigun-chat-message-block',false);
-                                    oldMessageIncrease();
-                                });
-                            },
-                            error: function(error){
-                                console.log(error)
-                            }
-                        }).always(function() {
-                            $(parent).attr('loaded', '');
-                        });
+                            }).always(function () {
+                                $(parent).attr('loaded', '');
+                            });
+                        }
                     }
-                }
-            });
+                });
         }
 
         //reset olf message count
@@ -240,6 +238,17 @@ $(window).ready(function(){
                 }
             });
         }
+
+        $('#poprigun-dialog-delete').click(function(){
+            var dialogId = $('#poprigun-chat-message-block').data('dialog');
+            $.get('/pchat/delete-dialog', {'dialog_id': dialogId}, function(data){
+                if(data.status == 'success'){
+                    self.messageOldCount = 0;
+                    $('#poprigun-chat-message-block').data('messages',0);
+                    $('.poprigun-chat-show').trigger('click');
+                }
+            })
+        });
 
         $(document).on('submit', '#message-send-form', function(event){
             event.preventDefault();
@@ -265,7 +274,13 @@ $(window).ready(function(){
                     },
                     success: function (data) {
                         $('#poprigunchat-message').val('');
-                        self.getDialogMessage();
+                        var count = parseInt($('#poprigun-chat-message-block').data('messages'));
+                        $.each(data,function(i,j){
+                            j.date = dateTimeZone(j.date,self.dateFormat);
+                            addItem(j,'#poprigun-chat-message','#poprigun-chat-message-block',true);
+                            $('#poprigun-chat-message-block').data('messages',count + 1);
+                            oldMessageIncrease();
+                        });
                     },
                     error: function(error) {
                         console.log(error);
@@ -274,7 +289,7 @@ $(window).ready(function(){
                     self.sendMessageStatus = false;
                 });
             }
-            return false;
+
         });
 
 

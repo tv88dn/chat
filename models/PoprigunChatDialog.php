@@ -231,7 +231,7 @@ class PoprigunChatDialog extends ActiveRecord implements StatusInterface
      * @param string $message
      * @return bool
      */
-    public static function isMessageSend($senderId, $id, $type, $message){
+    public static function messageSend($senderId, $id, $type, $message){
 
         try{
             switch($type){
@@ -277,48 +277,44 @@ class PoprigunChatDialog extends ActiveRecord implements StatusInterface
         $poprigunChat->message = $message;
         $poprigunChat->user_id = $senderId;
 
-        return $poprigunChat->save();
+        if($poprigunChat->save()){
+            foreach($this->poprigunChatUsers as $user)
+            {
+                $rel = new PoprigunChatUserRel([
+                    'chat_id'=>$poprigunChat->id,
+                    'chat_user_id'=>$user->id,
+                ]);
+                if(!$rel->save()){
+                    error_log($rel->messages);
+                }
+            }
+            return $poprigunChat;
+        }
+        return false;
+
+
     }
 
     /**
-     * Get last message
-     *
-     * @param null|int $limit
-     * @param null|int $offset
-     * @param array|int $view
-     * @return array|\yii\db\ActiveRecord[]
-     */
-    public function getLastMessages($limit = null, $offset = null, $view = [PoprigunChat::NEW_MESSAGE, PoprigunChat::OLD_MESSAGE]){
-
-        $query = $this->hasMany(PoprigunChat::className(), ['dialog_id' => 'id'])
-            ->where(['view' => $view])
-            ->orderBy(['id' => SORT_DESC]);
-
-        if(null != $limit){
-            $query->limit($limit);
-        }
-
-        if(null != $offset){
-            $query->offset($offset)
-                ->orderBy(['id' => SORT_ASC]);
-        }
-
-        return $query->all();
-    }
-
-    /**
-     * Get old|archive messages
+     * Get messages
      *
      * @param null $limit
      * @param null $offset
      * @param array $view
+     * @param int $oldMessages
      * @return array|\yii\db\ActiveRecord[]
+     *
      */
-    public function getOldMessages($limit = null, $offset = null, $view = [PoprigunChat::NEW_MESSAGE, PoprigunChat::OLD_MESSAGE]){
-
-        $query = $this->hasMany(PoprigunChat::className(), ['dialog_id' => 'id'])
-            ->where(['view' => $view])
-            ->orderBy(['id' => SORT_DESC]);
+    public function getMessages($limit = null, $offset = null, $view = [PoprigunChat::NEW_MESSAGE, PoprigunChat::OLD_MESSAGE])
+    {
+        $query = PoprigunChat::find()
+            ->joinWith('chatUserRel')
+            ->joinWith('chatUserRel.chatUser')
+            ->where(['poprigun_chat.dialog_id'=>$this->id])
+            ->andWhere(['view'=>$view])
+            ->andWhere(['poprigun_chat_user_rel.status'=>StatusInterface::STATUS_ACTIVE])
+            ->andWhere(['poprigun_chat_user.user_id'=>Yii::$app->user->id])
+            ->orderBy(['poprigun_chat.id' => SORT_DESC]);
 
         if(null != $limit){
             $query->limit($limit);

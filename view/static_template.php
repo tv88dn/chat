@@ -13,7 +13,7 @@
         <div class="col-sm-8">
             <div class="panel panel-primary">
                 <div class="panel-heading">Chat</div>
-                <div class="panel-body poprigun-chat-message-ajax" id="poprigun-chat-message-ajax">
+                <div class="panel-body poprigun-chat-message-ajax">
                     <ul id="poprigun-chat-message-block" class="media-list"></ul>
                     <div id="poprigun-chat-scroll-down"></div>
                 </div>
