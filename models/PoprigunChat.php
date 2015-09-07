@@ -43,7 +43,7 @@ class PoprigunChat extends ActiveRecord implements StatusInterface
     public function rules()
     {
         return [
-            [['dialog_id', 'user_id'], 'required'],
+            [['dialog_id', 'user_id', 'message'], 'required'],
             [['dialog_id', 'user_id', 'view', 'status'], 'integer'],
             [['updated_at', 'created_at'], 'safe'],
             [['message'], 'string', 'max' => 2000],

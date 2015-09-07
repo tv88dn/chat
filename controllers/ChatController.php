@@ -72,10 +72,10 @@ class ChatController extends Controller{
         }
 
         if($old){
-            $json = self::getMessageArray($dialog->getOldMessages($limit, $offset),$options);
+            $json = $this->getMessageArray($dialog->getOldMessages($limit, $offset),$options);
         }else{
 
-            $json = self::getMessageArray($dialog->getLastMessages(empty($offset) ? $limit : null, $offset),$options);
+            $json = $this->getMessageArray($dialog->getLastMessages(empty($offset) ? $limit : null, $offset),$options);
         }
 
         if(!empty($json)){
@@ -101,14 +101,14 @@ class ChatController extends Controller{
     public function actionSendMessage(){
 
         $id = Yii::$app->request->post('id');
-        $type = Yii::$app->request->post('type');
+        $type = Yii::$app->request->post('type', 'dialog');
         $message = Yii::$app->request->post('message');
 
         Yii::$app->response->format = Response::FORMAT_JSON;
         return PoprigunChatDialog::isMessageSend($this->user->id, $id, $type, $message);
     }
 
-    private static function getMessageArray($dialog, $options = []){
+    protected function getMessageArray($dialog, $options = []){
 
         $result = [];
         foreach($dialog as $key => $message){

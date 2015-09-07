@@ -1,7 +1,5 @@
 $(window).ready(function(){
-
     var PoprigunChat = function(options){
-
         var self = this;
         var messageUpdate = null;
         var dialogUpdate = null;
@@ -171,14 +169,15 @@ $(window).ready(function(){
             if(self.userTimeZone){
                 //messageTime = new Date(messageDate*1000) + date.getTimezoneOffset() * 60000;
             }
-
             //date format
             if(dateFormat){
 
             }
 
             dateTime = (messageTime.toTimeString()).slice(0,8);
-            return messageTime.toDateString() +' ' + dateTime;
+            //TODO add js date format
+            //return messageTime.toDateString() +' ' + dateTime;
+            return messageDate;
         }
 
         //scroll message
@@ -237,17 +236,17 @@ $(window).ready(function(){
         if(this.sendByEnter){
             $('#poprigun-chat-text').on('keypress',function(e){
                 if(e.keyCode==13){
-                    $('#poprigun-chat-send').click();
+                    $('#message-send-form').submit();
                 }
             });
         }
 
-        //send message
-        $('#poprigun-chat-send').on('click',function(){
-
-            var inputValue = $('#poprigun-chat-text').val();
+        $(document).on('submit', '#message-send-form', function(event){
+            event.preventDefault();
+            event.stopPropagation();
+            var inputValue = $('#poprigunchat-message').val();
             var dialogId = $('#poprigun-chat-message-block').data('dialog');
-
+            var that = this;
             if(inputValue.length && !self.sendMessageStatus){
 
                 self.sendMessageStatus = true;
@@ -259,12 +258,13 @@ $(window).ready(function(){
                         id: dialogId,
                         message: inputValue,
                         type: 'dialog',
+                        '_csrf': $(that).find('input[name="_csrf"]').val(),
                         options:  {
                             showAvatar: self.showAvatar
                         }
                     },
                     success: function (data) {
-                        $('#poprigun-chat-text').val('');
+                        $('#poprigunchat-message').val('');
                         self.getDialogMessage();
                     },
                     error: function(error) {
@@ -274,7 +274,10 @@ $(window).ready(function(){
                     self.sendMessageStatus = false;
                 });
             }
+            return false;
         });
+
+
 
         //show dialog message
         $('#poprigun-chat-dialog-block').on('click','.poprigun-chat-show',function(){
